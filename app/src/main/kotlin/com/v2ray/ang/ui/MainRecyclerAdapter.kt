@@ -303,6 +303,35 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
         }
     }
 
+    fun connectToFirst(){
+        mActivity.runOnUiThread {
+            val selected = mainStorage?.decodeString(MmkvManager.KEY_SELECTED_SERVER)
+            val guid = mActivity.mainViewModel.serversCache[0].guid
+//            if (guid != selected) {
+                mainStorage?.encode(MmkvManager.KEY_SELECTED_SERVER, guid)
+                if (!TextUtils.isEmpty(selected)) {
+                    notifyItemChanged(mActivity.mainViewModel.getPosition(selected!!))
+                }
+                notifyItemChanged(mActivity.mainViewModel.getPosition(guid))
+                try{
+                    mActivity.showCircle()
+                    if (isRunning) {
+                        Utils.stopVService(mActivity)
+                    }
+                }finally {
+                    Observable.timer(500, TimeUnit.MILLISECONDS)
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe {
+                            V2RayServiceManager.startV2Ray(mActivity)
+                            mActivity.hideCircle()
+                        }
+                }
+//            }else{
+//                Log.d("S", "NO:(")
+//            }
+        }
+    }
+
     private fun shareFullContent(guid: String) {
         if (AngConfigManager.shareFullContent2Clipboard(mActivity, guid) == 0) {
             mActivity.toast(R.string.toast_success)

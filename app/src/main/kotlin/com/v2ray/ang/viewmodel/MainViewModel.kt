@@ -141,6 +141,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     MessageUtil.sendMsg2TestService(getApplication(), AppConfig.MSG_MEASURE_CONFIG, Pair(item.guid, config.content))
                 }
             }
+            mainRecyclerAdapter.sortServersBySpeed()
         }
     }
 
@@ -233,6 +234,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     val resultPair = intent.getSerializableExtra("content") as Pair<String, Long>
                     MmkvManager.encodeServerTestDelayMillis(resultPair.first, resultPair.second)
                     updateListAction.value = getPosition(resultPair.first)
+                    if(mainRecyclerAdapter != null) {
+                        viewModelScope.launch(Dispatchers.Default) {
+                            delay(1000)
+                            mainRecyclerAdapter!!.sortServersBySpeed()
+                        }
+                    }
                 }
             }
         }

@@ -319,9 +319,25 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
         }
 
         R.id.connect_by_speed -> {
-//            mainViewModel.testAllRealPing()
-//            adapter.notifyDataSetChanged()
-            adapter.sortServersBySpeed()
+            toast("Connect to fastest server...")
+            mainViewModel.testAllRealPing(adapter)
+            mainViewModel.runtimeUpdateScope.launch {
+                delay(2000)
+
+                if (mainViewModel.isRunning.value == true) {
+                    Utils.stopVService(this@MainActivity)
+                }
+                if (settingsStorage?.decodeString(AppConfig.PREF_MODE) ?: "VPN" == "VPN") {
+                    val intent = VpnService.prepare(this@MainActivity)
+                    if (intent == null) {
+                        adapter.connectToFirst()
+                    } else {
+                        requestVpnPermission.launch(intent)
+                    }
+                } else {
+                    toast("پشتیبانی نمیشود")
+                }
+            }
             true
         }
 
