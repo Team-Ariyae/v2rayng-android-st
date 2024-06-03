@@ -60,10 +60,14 @@
         </menu>
     </item>
     <item
-        android:id="@+id/filter_config"
-        android:icon="@drawable/ic_outline_filter_alt_white_24"
-        android:title="@string/title_filter_config"
+        android:id="@+id/connect_by_speed"
+        android:icon="@drawable/ic_stat_proxy"
+        android:title="Connect"
         app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/filter_config"
+        android:title="@string/title_filter_config"
+        app:showAsAction="never" />
     <item
         android:id="@+id/service_restart"
         android:title="@string/title_service_restart"

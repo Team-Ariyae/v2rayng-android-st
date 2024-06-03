@@ -318,6 +318,11 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
             true
         }
 
+        R.id.connect_by_speed -> {
+            adapter.sortServersBySpeed()
+            true
+        }
+
         else -> super.onOptionsItemSelected(item)
     }
 
