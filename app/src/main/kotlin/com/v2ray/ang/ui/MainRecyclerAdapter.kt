@@ -56,6 +56,7 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
     }
     var isRunning = false
     private var moveBusy = false
+    private var ready = false
 
     private fun getTestDelayMillis(guid: String): Long {
         val testDelayString = MmkvManager.decodeServerAffiliationInfo(guid)?.getTestDelayString()
@@ -71,9 +72,9 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
 
     override fun getItemCount() = mActivity.mainViewModel.serversCache.size + 1
 
-    private suspend fun moveTo(from: Int, to: Int) {
+    suspend fun moveTo(from: Int, to: Int) {
         if (moveBusy) {
-            delay(369)
+            delay(300)
             moveTo(from, to)
         } else {
             withContext(Dispatchers.Main) {
@@ -82,7 +83,6 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
         }
     }
 
-    // by MRB
     fun sortServersBySpeed() {
         val sortedList = activity.mainViewModel.serversCache.sortedWith(compareBy { getTestDelayMillis(it.guid) })
 
@@ -92,7 +92,8 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
                 if (oldPosition != i) {
                     moveTo(oldPosition, i)
                 }
-            } // save and move ;)
+            }
+//            activity.mainViewModel.saveSortCache(sortedList.toMutableList())
         }
     }
 
@@ -103,6 +104,80 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
 
             val outbound = config.getProxyOutbound()
             val aff = MmkvManager.decodeServerAffiliationInfo(guid)
+
+//            // by MRB
+//            fun sp() {
+//                try{
+//                    mActivity.mainViewModel.runtimeUpdateScope.launch {
+//
+//                        suspend fun move(from: Int, to: Int) {
+//                            if (moveBusy) {
+//                                delay(300)
+//                                move(from, to)
+//                            } else {
+//                                withContext(Dispatchers.Main) {
+//                                    this@MainRecyclerAdapter.onItemMove(from, to)
+//                                }
+//                            }
+//                        }
+//
+//                        val testDelay1 = aff?.testDelayMillis ?: 0L
+//
+//                        if(testDelay1 >= 0L){
+//                            move(position, this@MainRecyclerAdapter.itemCount - 2)
+//                            Log.d("F", "OUT: $position")
+//                            return@launch
+//                        }else{
+//                            Log.d("Fcc", "OUT: $position, 2: $testDelay1")
+//                        }
+//
+////                        if (position >= 1) {
+////                            val guid_ = mActivity.mainViewModel.serversCache[position - 1].guid
+////                            val aff_ = MmkvManager.decodeServerAffiliationInfo(guid_)
+////                            val testDelay2 = aff_?.testDelayMillis ?: 0L
+////
+////                            if (aff_?.getTestDelayString() != "ms" && !aff_?.getTestDelayString().isNullOrEmpty()) {
+////                                if ((aff_?.testDelayMillis ?: 0L) < 0L) {
+////                                    move(position, position - 1)
+////                                } else {
+////                                    if (testDelay1 < testDelay2) {
+////                                        move(position, position - 1)
+//////                                        mActivity.mainViewModel.runtimeUpdateList.value = guid_
+////                                    }
+////                                }
+////                            } else {
+////                                move(position, position - 1)
+////                            }
+////                        }
+//                    }
+//                }catch (e: Exception){
+//                    mActivity.mainViewModel.clearRuntimelistScope(mActivity)
+//                    e.printStackTrace()
+//                }
+//            }
+//
+//            sp()
+
+            // چک کنید آیا این آیتم قبلاً مشاهده شده است یا خیر
+//            if (!observedItems.contains(position)) {
+//                mActivity.mainViewModel.runtimeUpdateList.observe(mActivity) { index ->
+////                    if((index ?: "") == guid) {
+//                        sp()
+////                    }
+//                }
+//                observedItems.add(position)
+//            }
+
+//            mActivity.mainViewModel.runtimeUpdateScope.launch {
+//                try{
+//                    while (true) {
+//                        delay(10000)
+//                        sp()
+//                    }
+//                }catch (e: Exception){
+//                    mActivity.mainViewModel.clearRuntimelistScope(mActivity)
+//                }
+//            }
 
             holder.itemMainBinding.tvName.text = config.remarks
             holder.itemView.setBackgroundColor(Color.TRANSPARENT)
@@ -288,17 +363,30 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
 
     override fun onItemMove(fromPosition: Int, toPosition: Int): Boolean {
         moveBusy = true
-        mActivity.mainViewModel.swapServer(fromPosition, toPosition)
-        notifyItemMoved(fromPosition, toPosition)
-        // position is changed, since position is used by click callbacks, need to update range
-        if (toPosition > fromPosition)
-            notifyItemRangeChanged(fromPosition, toPosition - fromPosition + 1)
-        else
-            notifyItemRangeChanged(toPosition, fromPosition - toPosition + 1)
-        return true
+        try{
+            mActivity.mainViewModel.swapServer(fromPosition, toPosition)
+            notifyItemMoved(fromPosition, toPosition)
+            // position is changed, since position is used by click callbacks, need to update range
+            if (toPosition > fromPosition)
+                notifyItemRangeChanged(fromPosition, toPosition - fromPosition + 1)
+            else
+                notifyItemRangeChanged(toPosition, fromPosition - toPosition + 1)
+            return true
+        }finally {
+            moveBusy = false
+        }
     }
 
     override fun onItemMoveCompleted() {
         moveBusy = false
+    }
+
+    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
+        super.onAttachedToRecyclerView(recyclerView)
+        ready = true
+    }
+    override fun onViewRecycled(holder: BaseViewHolder) {
+        super.onViewRecycled(holder)
+        ready = true
     }
 }
