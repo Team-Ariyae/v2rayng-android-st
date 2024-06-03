@@ -319,7 +319,7 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
         }
 
         R.id.connect_by_speed -> {
-            adapter.sortServersBySpeed()
+            // TODO()
             true
         }
 
