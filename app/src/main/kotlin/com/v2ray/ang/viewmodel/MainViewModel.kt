@@ -122,12 +122,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun testAllRealPing() {
         MessageUtil.sendMsg2TestService(getApplication(), AppConfig.MSG_MEASURE_CONFIG_CANCEL, "")
-        MmkvManager.clearAllTestDelayResults()
-        updateListAction.value = -1 // update all
+//        MmkvManager.clearAllTestDelayResults()
+//        updateListAction.value = -1 // update all
 
         getApplication<AngApplication>().toast(R.string.connection_test_testing)
-        viewModelScope.launch(Dispatchers.Default) { // without Dispatchers.Default viewModelScope will launch in main thread
-            for (item in serversCache) {
+        viewModelScope.launch(Dispatchers.Default) {
+            val serversCopy = ArrayList(serversCache)  // ایجاد یک کپی از کالکشن اصلی
+            for (item in serversCopy) {
                 val config = V2rayConfigUtil.getV2rayConfig(getApplication(), item.guid)
                 if (config.status) {
                     MessageUtil.sendMsg2TestService(getApplication(), AppConfig.MSG_MEASURE_CONFIG, Pair(item.guid, config.content))
