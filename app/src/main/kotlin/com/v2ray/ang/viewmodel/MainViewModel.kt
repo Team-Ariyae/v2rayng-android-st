@@ -19,6 +19,7 @@ import com.v2ray.ang.databinding.DialogConfigFilterBinding
 import com.v2ray.ang.dto.*
 import com.v2ray.ang.extension.toast
 import com.v2ray.ang.ui.MainActivity
+import com.v2ray.ang.ui.MainRecyclerAdapter
 import com.v2ray.ang.util.*
 import com.v2ray.ang.util.MmkvManager.KEY_ANG_CONFIGS
 import kotlinx.coroutines.*
@@ -35,27 +36,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val serversCache = mutableListOf<ServersCache>()
     val isRunning by lazy { MutableLiveData<Boolean>() }
     val updateListAction by lazy { MutableLiveData<Int>() }
-//    val runtimeUpdateList by lazy { MutableLiveData<String>() }
     val updateTestResultAction by lazy { MutableLiveData<String>() }
 
     private val tcpingTestScope by lazy { CoroutineScope(Dispatchers.IO) }
     val runtimeUpdateScope by lazy { CoroutineScope(Dispatchers.IO) }
+
+    var mainRecyclerAdapter: MainRecyclerAdapter? = null
 
     fun startListenBroadcast() {
         isRunning.value = false
         getApplication<AngApplication>().registerReceiver(mMsgReceiver, IntentFilter(AppConfig.BROADCAST_ACTION_ACTIVITY))
         MessageUtil.sendMsg2Service(getApplication(), AppConfig.MSG_REGISTER_CLIENT, "")
     }
-
-//    fun clearRuntimelistScope(mainActivity: MainActivity){
-//        runtimeUpdateScope.coroutineContext[Job]?.cancelChildren()
-//        runtimeUpdateList.removeObservers(mainActivity)
-//    }
-//
-//    fun startRuntimeScope(){
-////        clearRuntimelistScope(mainActivity)
-////        runtimeUpdateList.value = 7
-//    }
 
     override fun onCleared() {
         getApplication<AngApplication>().unregisterReceiver(mMsgReceiver)
@@ -134,7 +126,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun testAllRealPing() {
+    fun testAllRealPing(mainRecyclerAdapter: MainRecyclerAdapter) {
+        this.mainRecyclerAdapter = mainRecyclerAdapter
         MessageUtil.sendMsg2TestService(getApplication(), AppConfig.MSG_MEASURE_CONFIG_CANCEL, "")
 //        MmkvManager.clearAllTestDelayResults()
 //        updateListAction.value = -1 // update all
@@ -240,7 +233,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     val resultPair = intent.getSerializableExtra("content") as Pair<String, Long>
                     MmkvManager.encodeServerTestDelayMillis(resultPair.first, resultPair.second)
                     updateListAction.value = getPosition(resultPair.first)
-//                    runtimeUpdateList.value = resultPair.first
                 }
             }
         }

@@ -46,7 +46,7 @@ import java.io.FileOutputStream
 class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedListener {
     private lateinit var binding: ActivityMainBinding
 
-    private val adapter by lazy { MainRecyclerAdapter(this) }
+    val adapter by lazy { MainRecyclerAdapter(this) }
     private val mainStorage by lazy { MMKV.mmkvWithID(MmkvManager.ID_MAIN, MMKV.MULTI_PROCESS_MODE) }
     private val settingsStorage by lazy { MMKV.mmkvWithID(MmkvManager.ID_SETTING, MMKV.MULTI_PROCESS_MODE) }
     private val requestVpnPermission = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
@@ -280,7 +280,7 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
         }
 
         R.id.real_ping_all -> {
-            mainViewModel.testAllRealPing()
+            mainViewModel.testAllRealPing(adapter)
             true
         }
 
@@ -319,7 +319,9 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
         }
 
         R.id.connect_by_speed -> {
-            // TODO()
+//            mainViewModel.testAllRealPing()
+//            adapter.notifyDataSetChanged()
+            adapter.sortServersBySpeed()
             true
         }
 
@@ -333,6 +335,25 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
                 .putExtra("subscriptionId", mainViewModel.subscriptionId)
                 .setClass(this, ServerActivity::class.java)
         )
+    }
+
+    fun removeServerSp(guid: String, position:Int) {
+        this.runOnUiThread {
+            try{
+                if (!binding.recyclerView.isComputingLayout && !binding.recyclerView.isAnimating) {
+                    mainViewModel.removeServer(guid)
+                    adapter.notifyItemRemoved(position)
+                    adapter.notifyItemRangeChanged(position, this.mainViewModel.serversCache.size)
+                }else{
+                    mainViewModel.runtimeUpdateScope.launch {
+                        delay(500)
+                        removeServerSp(guid, position)
+                    }
+                }
+            }catch (e: Exception){
+
+            }
+        }
     }
 
     /**
@@ -401,7 +422,7 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
         if (count > 0) {
             toast(R.string.toast_success)
             mainViewModel.reloadServerList()
-            mainViewModel.testAllRealPing()
+            mainViewModel.testAllRealPing(adapter)
 
         } else {
             toast(R.string.toast_failure)

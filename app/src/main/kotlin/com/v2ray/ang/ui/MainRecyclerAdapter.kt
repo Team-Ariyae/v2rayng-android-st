@@ -56,12 +56,11 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
     }
     var isRunning = false
     private var moveBusy = false
-//    private var ready = false
 
-//        private fun getTestDelayMillis(guid: String): Long {
-//        val testDelayString = MmkvManager.decodeServerAffiliationInfo(guid)?.getTestDelayString()
-//        return testDelayString?.replace("ms", "")?.trim()?.toLongOrNull() ?: Long.MAX_VALUE
-//    }
+    private fun getTestDelayMillis(guid: String): Long {
+        val testDelayString = MmkvManager.decodeServerAffiliationInfo(guid)?.getTestDelayString()
+        return testDelayString?.replace("ms", "")?.trim()?.toLongOrNull() ?: Long.MAX_VALUE
+    }
 
 //    fun sortServersBySpeed() {
 //        val sortedList = activity.mainViewModel.serversCache.sortedWith(compareBy { getTestDelayMillis(it.guid) })
@@ -72,6 +71,31 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
 
     override fun getItemCount() = mActivity.mainViewModel.serversCache.size + 1
 
+    private suspend fun moveTo(from: Int, to: Int) {
+        if (moveBusy) {
+            delay(369)
+            moveTo(from, to)
+        } else {
+            withContext(Dispatchers.Main) {
+                onItemMove(from, to)
+            }
+        }
+    }
+
+    // by MRB
+    fun sortServersBySpeed() {
+        val sortedList = activity.mainViewModel.serversCache.sortedWith(compareBy { getTestDelayMillis(it.guid) })
+
+        CoroutineScope(Dispatchers.Main).launch {
+            for (i in sortedList.indices) {
+                val oldPosition = activity.mainViewModel.serversCache.indexOfFirst { it.guid == sortedList[i].guid }
+                if (oldPosition != i) {
+                    moveTo(oldPosition, i)
+                }
+            } // save and move ;)
+        }
+    }
+
     override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
         if (holder is MainViewHolder) {
             val guid = mActivity.mainViewModel.serversCache[position].guid
@@ -80,80 +104,6 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
             val outbound = config.getProxyOutbound()
             val aff = MmkvManager.decodeServerAffiliationInfo(guid)
 
-//            // by MRB
-//            fun sp() {
-//                try{
-//                    mActivity.mainViewModel.runtimeUpdateScope.launch {
-//
-//                        suspend fun move(from: Int, to: Int) {
-//                            if (moveBusy) {
-//                                delay(300)
-//                                move(from, to)
-//                            } else {
-//                                withContext(Dispatchers.Main) {
-//                                    this@MainRecyclerAdapter.onItemMove(from, to)
-//                                }
-//                            }
-//                        }
-//
-//                        val testDelay1 = aff?.testDelayMillis ?: 0L
-//
-//                        if(testDelay1 >= 0L){
-//                            move(position, this@MainRecyclerAdapter.itemCount - 2)
-//                            Log.d("F", "OUT: $position")
-//                            return@launch
-//                        }else{
-//                            Log.d("Fcc", "OUT: $position, 2: $testDelay1")
-//                        }
-//
-////                        if (position >= 1) {
-////                            val guid_ = mActivity.mainViewModel.serversCache[position - 1].guid
-////                            val aff_ = MmkvManager.decodeServerAffiliationInfo(guid_)
-////                            val testDelay2 = aff_?.testDelayMillis ?: 0L
-////
-////                            if (aff_?.getTestDelayString() != "ms" && !aff_?.getTestDelayString().isNullOrEmpty()) {
-////                                if ((aff_?.testDelayMillis ?: 0L) < 0L) {
-////                                    move(position, position - 1)
-////                                } else {
-////                                    if (testDelay1 < testDelay2) {
-////                                        move(position, position - 1)
-//////                                        mActivity.mainViewModel.runtimeUpdateList.value = guid_
-////                                    }
-////                                }
-////                            } else {
-////                                move(position, position - 1)
-////                            }
-////                        }
-//                    }
-//                }catch (e: Exception){
-//                    mActivity.mainViewModel.clearRuntimelistScope(mActivity)
-//                    e.printStackTrace()
-//                }
-//            }
-//
-//            sp()
-
-            // چک کنید آیا این آیتم قبلاً مشاهده شده است یا خیر
-//            if (!observedItems.contains(position)) {
-//                mActivity.mainViewModel.runtimeUpdateList.observe(mActivity) { index ->
-////                    if((index ?: "") == guid) {
-//                        sp()
-////                    }
-//                }
-//                observedItems.add(position)
-//            }
-
-//            mActivity.mainViewModel.runtimeUpdateScope.launch {
-//                try{
-//                    while (true) {
-//                        delay(10000)
-//                        sp()
-//                    }
-//                }catch (e: Exception){
-//                    mActivity.mainViewModel.clearRuntimelistScope(mActivity)
-//                }
-//            }
-
             holder.itemMainBinding.tvName.text = config.remarks
             holder.itemView.setBackgroundColor(Color.TRANSPARENT)
             holder.itemMainBinding.tvTestResult.text = aff?.getTestDelayString() ?: ""
@@ -161,17 +111,7 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
             if(aff?.getTestDelayString() != "ms" && !aff?.getTestDelayString().isNullOrEmpty()){
                 if ((aff?.testDelayMillis ?: 0L) < 0L) {
                     holder.itemMainBinding.tvTestResult.setTextColor(ContextCompat.getColor(mActivity, R.color.colorPingRed))
-                    fun tryRm(){
-                        if(!moveBusy) {
-                            removeServer(guid, position)
-                        }else{
-                            mActivity.mainViewModel.runtimeUpdateScope.launch {
-                                delay(500)
-                                tryRm()
-                            }
-                        }
-                    }
-                    tryRm()
+                    removeServer(guid, position)
                 } else {
                     holder.itemMainBinding.tvTestResult.setTextColor(ContextCompat.getColor(mActivity, R.color.colorPing))
                 }
@@ -296,12 +236,8 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
         }
     }
 
-    private  fun removeServer(guid: String,position:Int) {
-        mActivity.runOnUiThread {
-            mActivity.mainViewModel.removeServer(guid)
-            notifyItemRemoved(position)
-            notifyItemRangeChanged(position, mActivity.mainViewModel.serversCache.size)
-        }
+    private fun removeServer(guid: String,position:Int) {
+        mActivity.removeServerSp(guid, position)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder {
