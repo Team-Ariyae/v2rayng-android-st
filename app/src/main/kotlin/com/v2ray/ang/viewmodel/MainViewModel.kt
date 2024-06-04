@@ -141,17 +141,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     MessageUtil.sendMsg2TestService(getApplication(), AppConfig.MSG_MEASURE_CONFIG, Pair(item.guid, config.content))
                 }
             }
-            delay(1333)
-
-            mainRecyclerAdapter.sortServersBySpeed()
-
-            delay(5000)
-
-            mainRecyclerAdapter.sortServersBySpeed()
-
             delay(6000)
 
-            mainRecyclerAdapter.sortServersBySpeed()
+            mainRecyclerAdapter.sortServersBySpeed(refAll = true)
         }
     }
 
@@ -246,8 +238,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     updateListAction.value = getPosition(resultPair.first)
 //                    if(mainRecyclerAdapter != null) {
 //                        viewModelScope.launch(Dispatchers.Default) {
-//                            delay(1000)
-//                            mainRecyclerAdapter!!.sortServersBySpeed()
+//                            mainRecyclerAdapter!!.sortServersBySpeed(getPosition(resultPair.first))
 //                        }
 //                    }
                 }

@@ -93,7 +93,7 @@ class MainRecyclerAdapter(val activity: MainActivity) :
         }
     }
 
-    fun sortServersBySpeed() {
+    fun sortServersBySpeed(currentPos: Int = 0, refAll: Boolean = false) {
         val sortedList =
             activity.mainViewModel.serversCache.sortedWith(compareBy { getTestDelayMillis(it.guid) })
 
@@ -101,7 +101,12 @@ class MainRecyclerAdapter(val activity: MainActivity) :
             for (i in sortedList.indices) {
                 val oldPosition =
                     activity.mainViewModel.serversCache.indexOfFirst { it.guid == sortedList[i].guid }
-                if (oldPosition != i) {
+                if(oldPosition != i && refAll){
+                    delay(666)
+                    moveTo(oldPosition, i)
+                    continue
+                }
+                if (oldPosition != i && oldPosition == currentPos) {
                     delay(666)
                     moveTo(oldPosition, i)
                 }
