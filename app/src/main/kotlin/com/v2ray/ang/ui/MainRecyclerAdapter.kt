@@ -80,7 +80,7 @@ class MainRecyclerAdapter(val activity: MainActivity) :
 
     suspend fun moveTo(from: Int, to: Int) {
         if (moveBusy) {
-            delay(300)
+            delay(500)
             moveTo(from, to)
         } else {
             try {
