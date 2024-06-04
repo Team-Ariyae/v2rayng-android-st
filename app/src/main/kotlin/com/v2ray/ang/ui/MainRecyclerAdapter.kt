@@ -3,14 +3,11 @@ package com.v2ray.ang.ui
 import android.content.Intent
 import android.graphics.Color
 import android.text.TextUtils
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.RecyclerView
 import com.google.gson.Gson
 import com.tencent.mmkv.MMKV
@@ -30,27 +27,35 @@ import com.v2ray.ang.util.MmkvManager
 import com.v2ray.ang.util.Utils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import rx.Observable
 import rx.android.schedulers.AndroidSchedulers
-import java.util.Collections
 import java.util.concurrent.TimeUnit
 
 
-class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<MainRecyclerAdapter.BaseViewHolder>()
-        , ItemTouchHelperAdapter {
+class MainRecyclerAdapter(val activity: MainActivity) :
+    RecyclerView.Adapter<MainRecyclerAdapter.BaseViewHolder>(), ItemTouchHelperAdapter {
     companion object {
         private const val VIEW_TYPE_ITEM = 1
         private const val VIEW_TYPE_FOOTER = 2
     }
 
     private var mActivity: MainActivity = activity
-    private val mainStorage by lazy { MMKV.mmkvWithID(MmkvManager.ID_MAIN, MMKV.MULTI_PROCESS_MODE) }
+    private val mainStorage by lazy {
+        MMKV.mmkvWithID(
+            MmkvManager.ID_MAIN,
+            MMKV.MULTI_PROCESS_MODE
+        )
+    }
     private val subStorage by lazy { MMKV.mmkvWithID(MmkvManager.ID_SUB, MMKV.MULTI_PROCESS_MODE) }
-    private val settingsStorage by lazy { MMKV.mmkvWithID(MmkvManager.ID_SETTING, MMKV.MULTI_PROCESS_MODE) }
+    private val settingsStorage by lazy {
+        MMKV.mmkvWithID(
+            MmkvManager.ID_SETTING,
+            MMKV.MULTI_PROCESS_MODE
+        )
+    }
     private val share_method: Array<out String> by lazy {
         mActivity.resources.getStringArray(R.array.share_method)
     }
@@ -84,11 +89,13 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
     }
 
     fun sortServersBySpeed() {
-        val sortedList = activity.mainViewModel.serversCache.sortedWith(compareBy { getTestDelayMillis(it.guid) })
+        val sortedList =
+            activity.mainViewModel.serversCache.sortedWith(compareBy { getTestDelayMillis(it.guid) })
 
         CoroutineScope(Dispatchers.Main).launch {
             for (i in sortedList.indices) {
-                val oldPosition = activity.mainViewModel.serversCache.indexOfFirst { it.guid == sortedList[i].guid }
+                val oldPosition =
+                    activity.mainViewModel.serversCache.indexOfFirst { it.guid == sortedList[i].guid }
                 if (oldPosition != i) {
                     moveTo(oldPosition, i)
                 }
@@ -183,12 +190,22 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
             holder.itemView.setBackgroundColor(Color.TRANSPARENT)
             holder.itemMainBinding.tvTestResult.text = aff?.getTestDelayString() ?: ""
 
-            if(aff?.getTestDelayString() != "ms" && !aff?.getTestDelayString().isNullOrEmpty()){
+            if (aff?.getTestDelayString() != "ms" && !aff?.getTestDelayString().isNullOrEmpty()) {
                 if ((aff?.testDelayMillis ?: 0L) < 0L) {
-                    holder.itemMainBinding.tvTestResult.setTextColor(ContextCompat.getColor(mActivity, R.color.colorPingRed))
+                    holder.itemMainBinding.tvTestResult.setTextColor(
+                        ContextCompat.getColor(
+                            mActivity,
+                            R.color.colorPingRed
+                        )
+                    )
                     removeServer(guid, position)
                 } else {
-                    holder.itemMainBinding.tvTestResult.setTextColor(ContextCompat.getColor(mActivity, R.color.colorPing))
+                    holder.itemMainBinding.tvTestResult.setTextColor(
+                        ContextCompat.getColor(
+                            mActivity,
+                            R.color.colorPing
+                        )
+                    )
                 }
             }
             if (guid == mainStorage?.decodeString(MmkvManager.KEY_SELECTED_SERVER)) {
@@ -206,17 +223,21 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
             var shareOptions = share_method.asList()
             when (config.configType) {
                 EConfigType.CUSTOM -> {
-                    holder.itemMainBinding.tvType.text = mActivity.getString(R.string.server_customize_config)
+                    holder.itemMainBinding.tvType.text =
+                        mActivity.getString(R.string.server_customize_config)
                     shareOptions = shareOptions.takeLast(1)
                 }
+
                 EConfigType.VLESS -> {
                     holder.itemMainBinding.tvType.text = config.configType.name
                 }
+
                 else -> {
                     holder.itemMainBinding.tvType.text = config.configType.name.lowercase()
                 }
             }
-            holder.itemMainBinding.tvStatistics.text = "${outbound?.getServerAddress()} : ${outbound?.getServerPort()}"
+            holder.itemMainBinding.tvStatistics.text =
+                "${outbound?.getServerAddress()} : ${outbound?.getServerPort()}"
 
             holder.itemMainBinding.layoutShare.setOnClickListener {
                 AlertDialog.Builder(mActivity).setItems(shareOptions.toTypedArray()) { _, i ->
@@ -226,11 +247,17 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
                                 if (config.configType == EConfigType.CUSTOM) {
                                     shareFullContent(guid)
                                 } else {
-                                    val ivBinding = ItemQrcodeBinding.inflate(LayoutInflater.from(mActivity))
-                                    ivBinding.ivQcode.setImageBitmap(AngConfigManager.share2QRCode(guid))
+                                    val ivBinding =
+                                        ItemQrcodeBinding.inflate(LayoutInflater.from(mActivity))
+                                    ivBinding.ivQcode.setImageBitmap(
+                                        AngConfigManager.share2QRCode(
+                                            guid
+                                        )
+                                    )
                                     AlertDialog.Builder(mActivity).setView(ivBinding.root).show()
                                 }
                             }
+
                             1 -> {
                                 if (AngConfigManager.share2Clipboard(mActivity, guid) == 0) {
                                     mActivity.toast(R.string.toast_success)
@@ -238,6 +265,7 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
                                     mActivity.toast(R.string.toast_failure)
                                 }
                             }
+
                             2 -> shareFullContent(guid)
                             else -> mActivity.toast("else")
                         }
@@ -249,9 +277,14 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
 
             holder.itemMainBinding.layoutEdit.setOnClickListener {
                 val intent = Intent().putExtra("guid", guid)
-                        .putExtra("isRunning", isRunning)
+                    .putExtra("isRunning", isRunning)
                 if (config.configType == EConfigType.CUSTOM) {
-                    mActivity.startActivity(intent.setClass(mActivity, ServerCustomConfigActivity::class.java))
+                    mActivity.startActivity(
+                        intent.setClass(
+                            mActivity,
+                            ServerCustomConfigActivity::class.java
+                        )
+                    )
                 } else {
                     mActivity.startActivity(intent.setClass(mActivity, ServerActivity::class.java))
                 }
@@ -282,11 +315,11 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
                         mActivity.showCircle()
                         Utils.stopVService(mActivity)
                         Observable.timer(500, TimeUnit.MILLISECONDS)
-                                .observeOn(AndroidSchedulers.mainThread())
-                                .subscribe {
-                                    V2RayServiceManager.startV2Ray(mActivity)
-                                    mActivity.hideCircle()
-                                }
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe {
+                                V2RayServiceManager.startV2Ray(mActivity)
+                                mActivity.hideCircle()
+                            }
                     }
                 }
             }
@@ -297,35 +330,38 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
                 holder.itemFooterBinding.layoutEdit.visibility = View.INVISIBLE
             } else {
                 holder.itemFooterBinding.layoutEdit.setOnClickListener {
-                    Utils.openUri(mActivity, "${Utils.decode(AppConfig.promotionUrl)}?t=${System.currentTimeMillis()}")
+                    Utils.openUri(
+                        mActivity,
+                        "${Utils.decode(AppConfig.promotionUrl)}?t=${System.currentTimeMillis()}"
+                    )
                 }
             }
         }
     }
 
-    fun connectToFirst(){
+    fun connectToFirst() {
         mActivity.runOnUiThread {
             val selected = mainStorage?.decodeString(MmkvManager.KEY_SELECTED_SERVER)
             val guid = mActivity.mainViewModel.serversCache[0].guid
 //            if (guid != selected) {
-                mainStorage?.encode(MmkvManager.KEY_SELECTED_SERVER, guid)
-                if (!TextUtils.isEmpty(selected)) {
-                    notifyItemChanged(mActivity.mainViewModel.getPosition(selected!!))
+            mainStorage?.encode(MmkvManager.KEY_SELECTED_SERVER, guid)
+            if (!TextUtils.isEmpty(selected)) {
+                notifyItemChanged(mActivity.mainViewModel.getPosition(selected!!))
+            }
+            notifyItemChanged(mActivity.mainViewModel.getPosition(guid))
+            try {
+                mActivity.showCircle()
+                if (isRunning) {
+                    Utils.stopVService(mActivity)
                 }
-                notifyItemChanged(mActivity.mainViewModel.getPosition(guid))
-                try{
-                    mActivity.showCircle()
-                    if (isRunning) {
-                        Utils.stopVService(mActivity)
+            } finally {
+                Observable.timer(500, TimeUnit.MILLISECONDS)
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe {
+                        V2RayServiceManager.startV2Ray(mActivity)
+                        mActivity.hideCircle()
                     }
-                }finally {
-                    Observable.timer(500, TimeUnit.MILLISECONDS)
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe {
-                            V2RayServiceManager.startV2Ray(mActivity)
-                            mActivity.hideCircle()
-                        }
-                }
+            }
 //            }else{
 //                Log.d("S", "NO:(")
 //            }
@@ -340,16 +376,29 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
         }
     }
 
-    private fun removeServer(guid: String,position:Int) {
+    private fun removeServer(guid: String, position: Int) {
         mActivity.removeServerSp(guid, position)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder {
         return when (viewType) {
             VIEW_TYPE_ITEM ->
-                MainViewHolder(ItemRecyclerMainBinding.inflate(LayoutInflater.from(parent.context), parent, false))
+                MainViewHolder(
+                    ItemRecyclerMainBinding.inflate(
+                        LayoutInflater.from(parent.context),
+                        parent,
+                        false
+                    )
+                )
+
             else ->
-                FooterViewHolder(ItemRecyclerFooterBinding.inflate(LayoutInflater.from(parent.context), parent, false))
+                FooterViewHolder(
+                    ItemRecyclerFooterBinding.inflate(
+                        LayoutInflater.from(parent.context),
+                        parent,
+                        false
+                    )
+                )
         }
     }
 
@@ -372,10 +421,10 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
     }
 
     class MainViewHolder(val itemMainBinding: ItemRecyclerMainBinding) :
-            BaseViewHolder(itemMainBinding.root), ItemTouchHelperViewHolder
+        BaseViewHolder(itemMainBinding.root), ItemTouchHelperViewHolder
 
     class FooterViewHolder(val itemFooterBinding: ItemRecyclerFooterBinding) :
-            BaseViewHolder(itemFooterBinding.root), ItemTouchHelperViewHolder
+        BaseViewHolder(itemFooterBinding.root), ItemTouchHelperViewHolder
 
     override fun onItemDismiss(position: Int) {
         val guid = mActivity.mainViewModel.serversCache.getOrNull(position)?.guid ?: return
@@ -392,7 +441,7 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
 
     override fun onItemMove(fromPosition: Int, toPosition: Int): Boolean {
         moveBusy = true
-        try{
+        try {
             mActivity.mainViewModel.swapServer(fromPosition, toPosition)
             notifyItemMoved(fromPosition, toPosition)
             // position is changed, since position is used by click callbacks, need to update range
@@ -401,7 +450,7 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
             else
                 notifyItemRangeChanged(toPosition, fromPosition - toPosition + 1)
             return true
-        }finally {
+        } finally {
             moveBusy = false
         }
     }
@@ -414,6 +463,7 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
         super.onAttachedToRecyclerView(recyclerView)
         ready = true
     }
+
     override fun onViewRecycled(holder: BaseViewHolder) {
         super.onViewRecycled(holder)
         ready = true
