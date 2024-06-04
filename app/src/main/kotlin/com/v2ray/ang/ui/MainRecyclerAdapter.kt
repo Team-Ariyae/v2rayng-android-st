@@ -3,6 +3,7 @@ package com.v2ray.ang.ui
 import android.content.Intent
 import android.graphics.Color
 import android.text.TextUtils
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -82,8 +83,12 @@ class MainRecyclerAdapter(val activity: MainActivity) :
             delay(300)
             moveTo(from, to)
         } else {
-            withContext(Dispatchers.Main) {
-                onItemMove(from, to)
+            try {
+                withContext(Dispatchers.Main) {
+                    onItemMove(from, to)
+                }
+            }catch (e: Exception){
+                Log.d("ERR [moveTo]", e.toString())
             }
         }
     }
@@ -450,9 +455,12 @@ class MainRecyclerAdapter(val activity: MainActivity) :
             else
                 notifyItemRangeChanged(toPosition, fromPosition - toPosition + 1)
             return true
+        }catch (e: Exception){
+            Log.d("ERR [moveTo]", e.toString())
         } finally {
             moveBusy = false
         }
+        return false
     }
 
     override fun onItemMoveCompleted() {
