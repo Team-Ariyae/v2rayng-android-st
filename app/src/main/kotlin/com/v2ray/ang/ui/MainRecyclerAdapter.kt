@@ -97,11 +97,12 @@ class MainRecyclerAdapter(val activity: MainActivity) :
         val sortedList =
             activity.mainViewModel.serversCache.sortedWith(compareBy { getTestDelayMillis(it.guid) })
 
-        CoroutineScope(Dispatchers.Main).launch {
+        mActivity.mainViewModel.runtimeUpdateScope.launch {
             for (i in sortedList.indices) {
                 val oldPosition =
                     activity.mainViewModel.serversCache.indexOfFirst { it.guid == sortedList[i].guid }
                 if (oldPosition != i) {
+                    delay(666)
                     moveTo(oldPosition, i)
                 }
             }
