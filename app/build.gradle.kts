@@ -14,6 +14,15 @@ android {
         versionCode = 558
         versionName = "1.8.22"
         multiDexEnabled = true
+        splits.abi {
+            reset()
+            include(
+                "arm64-v8a",
+                "armeabi-v7a",
+                "x86_64",
+                "x86"
+            )
+        }
     }
 
     compileOptions {
@@ -23,7 +32,6 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
-
         }
         debug {
             isMinifyEnabled = false
@@ -37,6 +45,12 @@ android {
         }
     }
 
+    packagingOptions {
+        jniLibs {
+            useLegacyPackaging = true
+        }
+    }
+
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_1_8.toString()
     }
@@ -44,7 +58,7 @@ android {
     splits {
         abi {
             isEnable = true
-            isUniversalApk = true
+            isUniversalApk = false
         }
     }
 
