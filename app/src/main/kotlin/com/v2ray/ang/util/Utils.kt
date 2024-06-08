@@ -1,35 +1,32 @@
 package com.v2ray.ang.util
 
+import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import android.text.Editable
-import android.util.Base64
-import com.google.zxing.WriterException
-import android.graphics.Bitmap
-import com.google.zxing.BarcodeFormat
-import com.google.zxing.qrcode.QRCodeWriter
-import com.google.zxing.EncodeHintType
-import java.util.*
-import kotlin.collections.HashMap
-import android.content.ClipData
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.res.Configuration.UI_MODE_NIGHT_MASK
-import android.content.res.Configuration.UI_MODE_NIGHT_YES
+import android.content.res.Configuration.UI_MODE_NIGHT_NO
 import android.net.Uri
 import android.os.Build
 import android.os.LocaleList
+import android.provider.Settings
+import android.text.Editable
+import android.util.Base64
 import android.util.Log
 import android.util.Patterns
 import android.webkit.URLUtil
+import androidx.appcompat.app.AppCompatDelegate
 import com.tencent.mmkv.MMKV
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.AppConfig.ANG_PACKAGE
 import com.v2ray.ang.BuildConfig
 import com.v2ray.ang.R
 import com.v2ray.ang.extension.toast
-import java.net.*
 import com.v2ray.ang.service.V2RayServiceManager
 import java.io.IOException
+import java.net.*
+import java.util.*
 
 object Utils {
 
@@ -143,18 +140,16 @@ object Utils {
      * get remote dns servers from preference
      */
     fun getRemoteDnsServers(): List<String> {
-        val remoteDns = settingsStorage?.decodeString(AppConfig.PREF_REMOTE_DNS) ?: AppConfig.DNS_AGENT
+        val remoteDns = settingsStorage?.decodeString(AppConfig.PREF_REMOTE_DNS) ?: AppConfig.DNS_PROXY
         val ret = remoteDns.split(",").filter { isPureIpAddress(it) || isCoreDNSAddress(it) }
         if (ret.isEmpty()) {
-            return listOf(AppConfig.DNS_AGENT)
+            return listOf(AppConfig.DNS_PROXY)
         }
         return ret
     }
 
     fun getVpnDnsServers(): List<String> {
-        val vpnDns = settingsStorage?.decodeString(AppConfig.PREF_VPN_DNS)
-                ?: settingsStorage?.decodeString(AppConfig.PREF_REMOTE_DNS)
-                ?: AppConfig.DNS_AGENT
+        val vpnDns = settingsStorage?.decodeString(AppConfig.PREF_VPN_DNS)?:AppConfig.DNS_VPN
         return vpnDns.split(",").filter { isPureIpAddress(it) }
         // allow empty, in that case dns will use system default
     }
@@ -164,41 +159,11 @@ object Utils {
      */
     fun getDomesticDnsServers(): List<String> {
         val domesticDns = settingsStorage?.decodeString(AppConfig.PREF_DOMESTIC_DNS) ?: AppConfig.DNS_DIRECT
-        val ret = domesticDns.split(",").filter { isPureIpAddress(it) || isCoreDNSAddress(it) }
+        val ret = domesticDns.split(",").filter { isPureIpAddress(it) }
         if (ret.isEmpty()) {
             return listOf(AppConfig.DNS_DIRECT)
         }
         return ret
-    }
-
-    /**
-     * create qrcode using zxing
-     */
-    fun createQRCode(text: String, size: Int = 800): Bitmap? {
-        try {
-            val hints = HashMap<EncodeHintType, String>()
-            hints[EncodeHintType.CHARACTER_SET] = "utf-8"
-            val bitMatrix = QRCodeWriter().encode(text,
-                    BarcodeFormat.QR_CODE, size, size, hints)
-            val pixels = IntArray(size * size)
-            for (y in 0 until size) {
-                for (x in 0 until size) {
-                    if (bitMatrix.get(x, y)) {
-                        pixels[y * size + x] = 0xff000000.toInt()
-                    } else {
-                        pixels[y * size + x] = 0xffffffff.toInt()
-                    }
-
-                }
-            }
-            val bitmap = Bitmap.createBitmap(size, size,
-                    Bitmap.Config.ARGB_8888)
-            bitmap.setPixels(pixels, 0, size, 0, 0, size, size)
-            return bitmap
-        } catch (e: WriterException) {
-            e.printStackTrace()
-            return null
-        }
     }
 
     /**
@@ -213,7 +178,7 @@ object Utils {
             //CIDR
             if (addr.indexOf("/") > 0) {
                 val arr = addr.split("/")
-                if (arr.count() == 2 && Integer.parseInt(arr[1]) > 0) {
+                if (arr.count() == 2 && Integer.parseInt(arr[1]) > -1) {
                     addr = arr[0]
                 }
             }
@@ -244,7 +209,7 @@ object Utils {
     }
 
     fun isPureIpAddress(value: String): Boolean {
-        return (isIpv4Address(value) || isIpv6Address(value))
+        return isIpv4Address(value) || isIpv6Address(value)
     }
 
     fun isIpv4Address(value: String): Boolean {
@@ -274,7 +239,7 @@ object Utils {
             if (value != null && Patterns.WEB_URL.matcher(value).matches() || URLUtil.isValidUrl(value)) {
                 return true
             }
-        } catch (e: WriterException) {
+        } catch (e: Exception) {
             e.printStackTrace()
             return false
         }
@@ -317,7 +282,7 @@ object Utils {
 
     fun urlDecode(url: String): String {
         return try {
-            URLDecoder.decode(URLDecoder.decode(url), "utf-8")
+            URLDecoder.decode(url, "UTF-8")
         } catch (e: Exception) {
             e.printStackTrace()
             url
@@ -350,6 +315,19 @@ object Utils {
         val extDir = context.getExternalFilesDir(AppConfig.DIR_ASSETS)
                 ?: return context.getDir(AppConfig.DIR_ASSETS, 0).absolutePath
         return extDir.absolutePath
+    }
+
+    fun backupPath(context: Context?): String {
+        if (context == null)
+            return ""
+        val extDir = context.getExternalFilesDir(AppConfig.DIR_BACKUPS)
+            ?: return context.getDir(AppConfig.DIR_BACKUPS, 0).absolutePath
+        return extDir.absolutePath
+    }
+
+    fun getDeviceIdForXUDPBaseKey(): String {
+        val androidId = Settings.Secure.ANDROID_ID.toByteArray(charset("UTF-8"))
+        return Base64.encodeToString(androidId.copyOf(32), Base64.NO_PADDING.or(Base64.URL_SAFE))
     }
 
     fun getUrlContext(url: String, timeout: Int): String {
@@ -391,11 +369,19 @@ object Utils {
 
     fun getDarkModeStatus(context: Context): Boolean {
         val mode = context.resources.configuration.uiMode and UI_MODE_NIGHT_MASK
-        return mode == UI_MODE_NIGHT_YES
+        return mode != UI_MODE_NIGHT_NO
+    }
+
+    fun setNightMode(context: Context) {
+        when (settingsStorage?.decodeString(AppConfig.PREF_UI_MODE_NIGHT, "0")) {
+            "0" -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+            "1" -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+            "2" -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+        }
     }
 
     fun getIpv6Address(address: String): String {
-        return if (isIpv6Address(address)) {
+        return if (isIpv6Address(address) && !address.contains('[') && !address.contains(']')) {
             String.format("[%s]", address)
         } else {
             address
@@ -409,6 +395,8 @@ object Utils {
             "zh-rCN" -> Locale("zh", "CN")
             "zh-rTW" -> Locale("zh", "TW")
             "vi" -> Locale("vi")
+            "ru" -> Locale("ru")
+            "fa" -> Locale("fa")
             else -> getSysLocale()
         }
 
@@ -423,5 +411,19 @@ object Utils {
             .replace(" ","%20")
             .replace("|","%7C")
     }
+
+    fun removeWhiteSpace(str: String?): String? {
+        return str?.replace(" ", "")
+    }
+
+    fun idnToASCII(str: String): String {
+        val url = URL(str)
+        return URL(url.protocol, IDN.toASCII(url.host, IDN.ALLOW_UNASSIGNED), url.port, url.file)
+            .toExternalForm()
+    }
+
+    fun isTv(context: Context): Boolean =
+        context.packageManager.hasSystemFeature(PackageManager.FEATURE_LEANBACK)
+
 }
 

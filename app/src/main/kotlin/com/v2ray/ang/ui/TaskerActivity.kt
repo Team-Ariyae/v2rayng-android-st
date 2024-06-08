@@ -1,6 +1,6 @@
 package com.v2ray.ang.ui
 
-import android.app.Activity
+import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import android.widget.ArrayAdapter
@@ -11,7 +11,6 @@ import android.content.Intent
 import android.text.TextUtils
 import android.view.Menu
 import android.view.MenuItem
-import com.google.zxing.WriterException
 import com.tencent.mmkv.MMKV
 import com.v2ray.ang.AppConfig
 import com.v2ray.ang.databinding.ActivityTaskerBinding
@@ -65,7 +64,7 @@ class TaskerActivity : BaseActivity() {
                     listview?.setItemChecked(pos, true)
                 }
             }
-        } catch (e: WriterException) {
+        } catch (e: Exception) {
             e.printStackTrace()
 
         }
@@ -91,7 +90,7 @@ class TaskerActivity : BaseActivity() {
 
         intent.putExtra(AppConfig.TASKER_EXTRA_BUNDLE, extraBundle)
         intent.putExtra(AppConfig.TASKER_EXTRA_STRING_BLURB, blurb)
-        setResult(Activity.RESULT_OK, intent)
+        setResult(AppCompatActivity.RESULT_OK, intent)
         finish()
     }
 

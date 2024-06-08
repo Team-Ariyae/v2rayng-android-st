@@ -1,37 +1,20 @@
 <resources>
-    <style name="AppThemeLight" parent="Theme.AppCompat.DayNight.DarkActionBar">
+
+    <style name="AppThemeDayNight" parent="Theme.AppCompat.DayNight">
         <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
-        <item name="colorMainBg">@color/colorBg</item>
-        <item name="colorMainText">@color/colorText</item>
+        <item name="android:statusBarColor">@color/colorPrimary</item>
+        <item name="android:navigationBarColor">@color/colorPrimary</item>
+        <item name="colorControlNormal">@color/colorAccent</item>
     </style>
 
-    <style name="AppThemeDark" parent="Theme.AppCompat.DayNight.DarkActionBar">
-        <item name="colorPrimary">@color/colorPrimaryByDark</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDarkByDark</item>
-        <item name="colorAccent">@color/colorAccentByDark</item>
-        <item name="colorMainBg">@color/colorBgByDark</item>
-        <item name="colorMainText">@color/colorTextByDark</item>
-    </style>
-
-    <style name="AppThemeLight_NoActionBar" parent="AppThemeLight">
-        <item name="windowActionBar">false</item>
-        <item name="windowNoTitle">true</item>
-    </style>
-
-    <style name="AppThemeDark_NoActionBar" parent="AppThemeDark">
+    <style name="AppThemeDayNight.NoActionBar" parent="AppThemeDayNight">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
     </style>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
-        <!-- Customize your theme here. -->
-        <!--<item name="colorPrimary">@color/colorPrimary</item>-->
-        <!--<item name="colorPrimaryDark">@color/colorPrimaryDark</item>-->
-        <!--<item name="colorAccent">@color/colorAccent</item>-->
-    </style>
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar"></style>
 
     <style name="AppTheme.NoActionBar">
         <item name="windowActionBar">false</item>
@@ -44,9 +27,4 @@
         <item name="android:colorBackgroundCacheHint">@null</item>
         <item name="android:windowIsTranslucent">true</item>
     </style>
-
-    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
-
-    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
-
 </resources>

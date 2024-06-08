@@ -6,6 +6,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import com.blacksquircle.ui.editorkit.utils.EditorTheme
 import com.blacksquircle.ui.language.json.JsonLanguage
 import com.google.gson.*
 import com.tencent.mmkv.MMKV
@@ -38,6 +39,9 @@ class ServerCustomConfigActivity : BaseActivity() {
         setContentView(view)
         title = getString(R.string.title_server)
 
+        if (!Utils.getDarkModeStatus(this)) {
+            binding.editor.colorScheme = EditorTheme.INTELLIJ_LIGHT
+        }
         binding.editor.language = JsonLanguage()
         val config = MmkvManager.decodeServerConfig(editGuid)
         if (config != null) {
@@ -45,7 +49,6 @@ class ServerCustomConfigActivity : BaseActivity() {
         } else {
             clearServer()
         }
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
     }
 
     /**
@@ -88,7 +91,7 @@ class ServerCustomConfigActivity : BaseActivity() {
         }
 
         val config = MmkvManager.decodeServerConfig(editGuid) ?: ServerConfig.create(EConfigType.CUSTOM)
-        config.remarks = binding.etRemarks.text.toString().trim()
+        config.remarks = v2rayConfig.remarks ?: binding.etRemarks.text.toString().trim()
         config.fullConfig = v2rayConfig
 
         MmkvManager.encodeServerConfig(editGuid, config)
@@ -107,6 +110,9 @@ class ServerCustomConfigActivity : BaseActivity() {
                     .setPositiveButton(android.R.string.ok) { _, _ ->
                         MmkvManager.removeServer(editGuid)
                         finish()
+                    }
+                    .setNegativeButton(android.R.string.no) {_, _ ->
+                        // do nothing
                     }
                     .show()
         }

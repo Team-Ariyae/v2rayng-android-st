@@ -107,24 +107,6 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/server_lab_flow" />
-
-            <Spinner
-                android:id="@+id/sp_flow"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/edit_height"
-                android:entries="@array/flows" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/layout_margin_top_height"
-            android:orientation="vertical">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
                 android:text="@string/server_lab_more_function"
                 android:textAppearance="@style/TextAppearance.AppCompat.Subhead" />
         </LinearLayout>
@@ -202,64 +184,7 @@
                 android:inputType="text" />
         </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/layout_margin_top_height"
-            android:orientation="vertical">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/server_lab_stream_security" />
-
-            <Spinner
-                android:id="@+id/sp_stream_security"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/edit_height"
-                android:entries="@array/streamsecurityxs"
-                android:nextFocusDown="@+id/et_sni" />
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/layout_margin_top_height"
-            android:orientation="vertical">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/server_lab_sni" />
-
-            <EditText
-                android:id="@+id/et_sni"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/edit_height"
-                android:inputType="text" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/layout_margin_top_height"
-            android:orientation="vertical">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/server_lab_allow_insecure" />
-
-            <Spinner
-                android:id="@+id/sp_allow_insecure"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/edit_height"
-                android:entries="@array/allowinsecures"
-                android:nextFocusUp="@+id/et_sni" />
-
-        </LinearLayout>
-
+        <include layout="@layout/tls_layout"  />
 
         <LinearLayout
             android:layout_width="match_parent"

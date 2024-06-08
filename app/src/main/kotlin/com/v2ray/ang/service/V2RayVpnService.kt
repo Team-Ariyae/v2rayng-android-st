@@ -36,6 +36,7 @@ class V2RayVpnService : VpnService(), ServiceControl {
     private val settingsStorage by lazy { MMKV.mmkvWithID(MmkvManager.ID_SETTING, MMKV.MULTI_PROCESS_MODE) }
 
     private lateinit var mInterface: ParcelFileDescriptor
+    private var isRunning = false
 
     //val fd: Int get() = mInterface.fd
     private lateinit var process: Process
@@ -110,7 +111,8 @@ class V2RayVpnService : VpnService(), ServiceControl {
         val builder = Builder()
         //val enableLocalDns = defaultDPreference.getPrefBoolean(AppConfig.PREF_LOCAL_DNS_ENABLED, false)
 
-        val routingMode = settingsStorage?.decodeString(AppConfig.PREF_ROUTING_MODE) ?: ERoutingMode.GLOBAL_PROXY.value
+        val routingMode = settingsStorage?.decodeString(AppConfig.PREF_ROUTING_MODE)
+            ?: ERoutingMode.BYPASS_LAN_MAINLAND.value
 
         builder.setMtu(VPN_MTU)
         builder.addAddress(PRIVATE_VLAN4_CLIENT, 30)
@@ -183,6 +185,7 @@ class V2RayVpnService : VpnService(), ServiceControl {
         // Create a new interface using the builder and save the parameters.
         try {
             mInterface = builder.establish()!!
+            isRunning = true
             runTun2socks()
         } catch (e: Exception) {
             // non-nullable lateinit var
@@ -219,6 +222,15 @@ class V2RayVpnService : VpnService(), ServiceControl {
             process = proBuilder
                     .directory(applicationContext.filesDir)
                     .start()
+            Thread(Runnable {
+                Log.d(packageName,"$TUN2SOCKS check")
+                process.waitFor()
+                Log.d(packageName,"$TUN2SOCKS exited")
+                if (isRunning) {
+                    Log.d(packageName,"$TUN2SOCKS restart")
+                    runTun2socks()
+                }
+            }).start()
             Log.d(packageName, process.toString())
 
             sendFd()
@@ -262,6 +274,7 @@ class V2RayVpnService : VpnService(), ServiceControl {
 //        val emptyInfo = VpnNetworkInfo()
 //        val info = loadVpnNetworkInfo(configName, emptyInfo)!! + (lastNetworkInfo ?: emptyInfo)
 //        saveVpnNetworkInfo(configName, info)
+        isRunning = false;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             try {
                 connectivity.unregisterNetworkCallback(defaultNetworkCallback)
