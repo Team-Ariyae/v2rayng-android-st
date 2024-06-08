@@ -2,6 +2,7 @@ package com.v2ray.ang.ui
 
 import android.Manifest
 import android.content.ActivityNotFoundException
+import android.content.DialogInterface
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.net.Uri
@@ -39,9 +40,11 @@ import com.v2ray.ang.util.AngConfigManager
 import com.v2ray.ang.util.MmkvManager
 import com.v2ray.ang.util.Utils
 import com.v2ray.ang.viewmodel.MainViewModel
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import me.drakeet.support.toast.ToastCompat
 import rx.Observable
 import rx.android.schedulers.AndroidSchedulers
@@ -342,19 +345,41 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
         }
 
         R.id.connect_by_speed -> {
-            toast("Connect to fastest server...")
-            if (mainViewModel.isRunning.value == true) {
-                Utils.stopVService(this@MainActivity)
-            }
-            if (settingsStorage?.decodeString(AppConfig.PREF_MODE) ?: "VPN" == "VPN") {
-                val intent = VpnService.prepare(this@MainActivity)
-                if (intent == null) {
-                    adapter.connectToFirst()
-                } else {
-                    requestVpnPermission.launch(intent)
+            val alert = AlertDialog.Builder(this).setMessage("Sorting...")
+                .setNegativeButton("Cancel") {_, _ ->
                 }
-            } else {
-                toast("پشتیبانی نمیشود")
+
+            try{
+                val show = alert.show()
+
+                val sc by lazy { CoroutineScope(Dispatchers.Main) }
+                sc.launch {
+                    MmkvManager.sortByTestResults()
+                    mainViewModel.reloadServerList()
+
+                    launch {
+                        delay(333)
+                        show.dismiss()
+                    }
+
+                    toast("Connect to fastest server...")
+                    if (mainViewModel.isRunning.value == true) {
+                        Utils.stopVService(this@MainActivity)
+                    }
+                    if (settingsStorage?.decodeString(AppConfig.PREF_MODE) ?: "VPN" == "VPN") {
+                        val intent = VpnService.prepare(this@MainActivity)
+                        if (intent == null) {
+                            adapter.connectToFirst()
+                        } else {
+                            requestVpnPermission.launch(intent)
+                        }
+                    } else {
+                        toast("پشتیبانی نمیشود")
+                    }
+                }
+
+            }catch (e: Exception){
+
             }
             true
         }
