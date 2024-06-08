@@ -51,52 +51,52 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
     }
     var isRunning = false
 
-    private var moveBusy = false
-    private var ready = false
+//    private var moveBusy = false
+//    private var ready = false
 
-    private fun getTestDelayMillis(guid: String): Long {
-        val testDelayString = MmkvManager.decodeServerAffiliationInfo(guid)?.getTestDelayString()
-        return testDelayString?.replace("ms", "")?.trim()?.toLongOrNull() ?: Long.MAX_VALUE
-    }
+//    private fun getTestDelayMillis(guid: String): Long {
+//        val testDelayString = MmkvManager.decodeServerAffiliationInfo(guid)?.getTestDelayString()
+//        return testDelayString?.replace("ms", "")?.trim()?.toLongOrNull() ?: Long.MAX_VALUE
+//    }
 
     override fun getItemCount() = mActivity.mainViewModel.serversCache.size + 1
 
-    suspend fun moveTo(from: Int, to: Int) {
-        if (moveBusy) {
-            delay(500)
-            moveTo(from, to)
-        } else {
-            try {
-                withContext(Dispatchers.Main) {
-                    onItemMove(from, to)
-                }
-            }catch (e: Exception){
-                Log.d("ERR [moveTo]", e.toString())
-            }
-        }
-    }
-
-    fun sortServersBySpeed(currentPos: Int = 0, refAll: Boolean = false) {
-        val sortedList =
-            activity.mainViewModel.serversCache.sortedWith(compareBy { getTestDelayMillis(it.guid) })
-
-        mActivity.mainViewModel.runtimeUpdateScope.launch {
-            for (i in sortedList.indices) {
-                val oldPosition =
-                    activity.mainViewModel.serversCache.indexOfFirst { it.guid == sortedList[i].guid }
-                if(oldPosition != i && refAll){
-                    delay(666)
-                    moveTo(oldPosition, i)
-                    continue
-                }
-                if (oldPosition != i && oldPosition == currentPos) {
-                    delay(666)
-                    moveTo(oldPosition, i)
-                }
-            }
-//            activity.mainViewModel.saveSortCache(sortedList.toMutableList())
-        }
-    }
+//    suspend fun moveTo(from: Int, to: Int) {
+//        if (moveBusy) {
+//            delay(500)
+//            moveTo(from, to)
+//        } else {
+//            try {
+//                withContext(Dispatchers.Main) {
+//                    onItemMove(from, to)
+//                }
+//            }catch (e: Exception){
+//                Log.d("ERR [moveTo]", e.toString())
+//            }
+//        }
+//    }
+//
+//    fun sortServersBySpeed(currentPos: Int = 0, refAll: Boolean = false) {
+//        val sortedList =
+//            activity.mainViewModel.serversCache.sortedWith(compareBy { getTestDelayMillis(it.guid) })
+//
+//        mActivity.mainViewModel.runtimeUpdateScope.launch {
+//            for (i in sortedList.indices) {
+//                val oldPosition =
+//                    activity.mainViewModel.serversCache.indexOfFirst { it.guid == sortedList[i].guid }
+//                if(oldPosition != i && refAll){
+//                    delay(666)
+//                    moveTo(oldPosition, i)
+//                    continue
+//                }
+//                if (oldPosition != i && oldPosition == currentPos) {
+//                    delay(666)
+//                    moveTo(oldPosition, i)
+//                }
+//            }
+////            activity.mainViewModel.saveSortCache(sortedList.toMutableList())
+//        }
+//    }
 
     fun connectToFirst() {
         mActivity.runOnUiThread {
@@ -156,7 +156,7 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
                             R.color.colorPingRed
                         )
                     )
-                    removeServer(guid, position)
+//                    removeServer(guid, position)
                 } else {
                     holder.itemMainBinding.tvTestResult.setTextColor(
                         ContextCompat.getColor(
@@ -341,7 +341,7 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
     }
 
     override fun onItemMove(fromPosition: Int, toPosition: Int): Boolean {
-        moveBusy = true
+//        moveBusy = true
         try {
             mActivity.mainViewModel.swapServer(fromPosition, toPosition)
             notifyItemMoved(fromPosition, toPosition)
@@ -354,22 +354,22 @@ class MainRecyclerAdapter(val activity: MainActivity) : RecyclerView.Adapter<Mai
         }catch (e: Exception){
             Log.d("ERR [moveTo]", e.toString())
         } finally {
-            moveBusy = false
+//            moveBusy = false
         }
         return false
     }
 
     override fun onItemMoveCompleted() {
-        moveBusy = false
+//        moveBusy = false
     }
 
-    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
-        super.onAttachedToRecyclerView(recyclerView)
-        ready = true
-    }
+//    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
+//        super.onAttachedToRecyclerView(recyclerView)
+//        ready = true
+//    }
 
-    override fun onViewRecycled(holder: BaseViewHolder) {
-        super.onViewRecycled(holder)
-        ready = true
-    }
+//    override fun onViewRecycled(holder: BaseViewHolder) {
+//        super.onViewRecycled(holder)
+//        ready = true
+//    }
 }

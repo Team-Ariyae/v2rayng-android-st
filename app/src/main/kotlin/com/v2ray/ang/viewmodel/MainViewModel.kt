@@ -154,7 +154,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun testAllRealPing(mainRecyclerAdapter: MainRecyclerAdapter) {
+    fun testAllRealPing() { // mainRecyclerAdapter: MainRecyclerAdapter
         MessageUtil.sendMsg2TestService(getApplication(), AppConfig.MSG_MEASURE_CONFIG_CANCEL, "")
 //        MmkvManager.clearAllTestDelayResults()
 //        updateListAction.value = -1 // update all
@@ -175,14 +175,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
 
 
-            delay(6000)
-
-            mainRecyclerAdapter.sortServersBySpeed(refAll = true)
-
-
-            delay(10000)
-
-            mainRecyclerAdapter.sortServersBySpeed(refAll = true)
+//            delay(6000)
+//            mainRecyclerAdapter.sortServersBySpeed(refAll = true)
+//            delay(10000)
+//            mainRecyclerAdapter.sortServersBySpeed(refAll = true)
         }
     }
 

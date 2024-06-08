@@ -290,7 +290,7 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
         }
 
         R.id.real_ping_all -> {
-            mainViewModel.testAllRealPing(adapter)
+            mainViewModel.testAllRealPing()
             true
         }
 
@@ -374,16 +374,16 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
     fun removeServerSp(guid: String, position: Int) {
         this.runOnUiThread {
             try {
-                if (!binding.recyclerView.isComputingLayout && !binding.recyclerView.isAnimating) {
+//                if (!binding.recyclerView.isComputingLayout && !binding.recyclerView.isAnimating) {
                     mainViewModel.removeServer(guid)
                     adapter.notifyItemRemoved(position)
                     adapter.notifyItemRangeChanged(position, this.mainViewModel.serversCache.size)
-                } else {
-                    mainViewModel.runtimeUpdateScope.launch {
-                        delay(500)
-                        removeServerSp(guid, position)
-                    }
-                }
+//                } else {
+//                    mainViewModel.runtimeUpdateScope.launch {
+//                        delay(500)
+//                        removeServerSp(guid, position)
+//                    }
+//                }
             } catch (e: Exception) {
 
             }
@@ -454,7 +454,7 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
         if (count > 0) {
             toast(R.string.toast_success)
             mainViewModel.reloadServerList()
-            mainViewModel.testAllRealPing(this@MainActivity.adapter)
+            mainViewModel.testAllRealPing()
             true
         } else {
             toast(R.string.toast_failure)
